@@ -1,0 +1,6 @@
+---
+- name: Manage Infrastructure Agents on Linux Fleets
+  hosts: all
+  become: true
+  roles:
+    - agent_manager
