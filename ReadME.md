@@ -1,31 +1,29 @@
 # Linux Fleet Agent Manager
 
-An automated, enterprise-grade configuration management tool using **Ansible** to manage the entire lifecycle—**Add (Install), Update, Remove, and Purge (Delete)**—of operational, security, and monitoring agents across Linux servers.
+An automated configuration management framework using **Ansible** and **Jenkins (Groovy)** to manage the entire lifecycle—**Install (Add), Upgrade (Update), and Purge (Delete)**—of infrastructure, security, and monitoring agents across Linux fleets.
 
-## 🚀 Supported Agents
-* **Splunk Universal Forwarder (UF)** — Log collection and forwarding.
-* **Tetragon** — eBPF-based security observability and runtime enforcement.
-* **cAdvisor** — Container resource usage and performance analysis.
-* **Zabbix Agent** — Infrastructure and application metrics collection.
-* **Node Exporter** — Hardware and OS metrics for Prometheus.
+## 🚀 Supported Fleet Agents
+* **Splunk Universal Forwarder (UF)** (`tags: [splunk]`)
+* **Tetragon Security Agent** (`tags: [tetragon]`)
+* **cAdvisor Container Monitor** (`tags: [cadvisor]`)
+* **Zabbix Agent** (`tags: [zabbix]`)
+* **Node Exporter** (`tags: [node_exporter]`)
 
 ---
 
-## 📂 Repository Structure
+## ⚙️ The State Matrix (How to Make Changes)
 
-```text
-linux-agent-manager/
-├── README.md
-├── site.yml                     # Main playbook execution entrypoint
-├── inventory.ini                # Target servers inventory list
-└── roles/
-    └── agent_manager/
-        ├── defaults/
-        │   └── main.yml         # Global versioning & state configurations
-        └── tasks/
-            ├── main.yml         # Main task orchestrator
-            ├── splunk_uf.yml    # Lifecycle tasks for Splunk UF
-            ├── tetragon.yml     # Lifecycle tasks for Tetragon
-            ├── cadvisor.yml     # Lifecycle tasks for cAdvisor
-            ├── zabbix.yml       # Lifecycle tasks for Zabbix Agent
-            └── node_exporter.yml# Lifecycle tasks for Node Exporter
+Instead of using different playbooks for adding or deleting agents, configurations are controlled entirely inside the variable matrix file: **`roles/agent_manager/defaults/main.yml`**.
+
+To modify your infrastructure layout, open that file and configure your target states:
+* Use **`"present"`** to Install or Upgrade an agent.
+* Use **`"absent"`** to completely Uninstall, Stop, and Delete an agent.
+
+---
+
+## 🏃 Runbook: Manual Execution Commands
+
+### 1. Run Everything (Standard Execution)
+Applies the current global state configuration defined in `defaults/main.yml` across all target instances.
+```bash
+ansible-playbook -i inventory.ini site.yml
