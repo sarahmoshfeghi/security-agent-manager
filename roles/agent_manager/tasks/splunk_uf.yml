@@ -1,0 +1,44 @@
+---
+# ==============================================================================
+# REMOVE / PURGE BLOCK
+# ==============================================================================
+- name: "Splunk UF | Remove Splunk Forwarder if state is absent"
+  block:
+    - name: Stop Splunk service
+      ansible.builtin.systemd:
+        name: splunk
+        state: stopped
+      failed_when: false
+
+    - name: Uninstall Splunk UF package
+      ansible.builtin.package:
+        name: splunkforwarder
+        state: absent
+
+    - name: Delete Splunk directories completely
+      ansible.builtin.file:
+        path: "/opt/splunkforwarder"
+        state: absent
+  when: splunk_uf_state == 'absent'
+
+# ==============================================================================
+# ADD / UPDATE BLOCK
+# ==============================================================================
+- name: "Splunk UF | Install or Update Splunk Forwarder"
+  block:
+    - name: Ensure splunk group exists
+      ansible.builtin.group:
+        name: splunk
+        state: present
+
+    - name: Ensure splunk user exists
+      ansible.builtin.user:
+        name: splunk
+        group: splunk
+        state: present
+
+    - name: Download and install Splunk UF via package manager
+      ansible.builtin.package:
+        name: "https://download.splunk.com/products/splunk/releases/{{ splunk_uf_version }}/universalforwarder/linux/splunkforwarder-{{ splunk_uf_version }}-linux-2.6-amd64.deb"
+        state: present
+  when: splunk_uf_state == 'present'
