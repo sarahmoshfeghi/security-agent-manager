@@ -1,0 +1,20 @@
+---
+- name: Manage Splunk Universal Forwarder
+  include_tasks: splunk_uf.yml
+  tags: [splunk, splunk_uf, security]
+
+- name: Manage Tetragon Security Agent
+  include_tasks: tetragon.yml
+  tags: [tetragon, security]
+
+- name: Manage cAdvisor Container Monitoring
+  include_tasks: cadvisor.yml
+  tags: [cadvisor, monitoring]
+
+- name: Manage Zabbix Agent
+  include_tasks: zabbix.yml
+  tags: [zabbix, monitoring]
+
+- name: Manage Prometheus Node Exporter
+  include_tasks: node_exporter.yml
+  tags: [node_exporter, monitoring]
