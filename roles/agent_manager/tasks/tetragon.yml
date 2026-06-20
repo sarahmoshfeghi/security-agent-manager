@@ -1,0 +1,44 @@
+---
+# ==============================================================================
+# REMOVE / PURGE BLOCK
+# ==============================================================================
+- name: "Tetragon | Complete Removal"
+  block:
+    - name: Stop and disable Tetragon service
+      ansible.builtin.systemd:
+        name: tetragon
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Purge Tetragon binaries and configurations
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/local/bin/tetragon
+        - /usr/local/bin/tetra
+        - /etc/tetragon
+        - /etc/systemd/system/tetragon.service
+  when: tetragon_state == 'absent'
+
+# ==============================================================================
+# ADD / UPDATE BLOCK
+# ==============================================================================
+- name: "Tetragon | Provision and Update"
+  block:
+    - name: Ensure Tetragon configuration directory exists
+      ansible.builtin.file:
+        path: /etc/tetragon
+        state: directory
+        mode: '0755'
+
+    # Note: Tetragon tarballs usually include installation wrappers or native binaries.
+    # Adjust URL or use package options depending on OS variant.
+    - name: Fetch and deploy Tetragon Binary
+      ansible.builtin.get_url:
+        url: "https://github.com/cilium/tetragon/releases/download/{{ tetragon_version }}/tetragon-{{ tetragon_version }}-amd64.tar.gz"
+        dest: /tmp/tetragon.tar.gz
+        mode: '0644'
+      failed_when: false # Setup fallback or update to your local package repository
+  when: tetragon_state == 'present'
