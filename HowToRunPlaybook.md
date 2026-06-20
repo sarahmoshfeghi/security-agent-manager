@@ -1,13 +1,4 @@
-Here are the final two files to complete your repository: the updated **`README.md`** containing explicit execution commands for every operational scenario, and a declarative **`Jenkinsfile` (Groovy)** to automate the entire process via CI/CD.
 
----
-
-### 📄 File 10: `README.md`
-
-* **Path:** `README.md`
-* **Description:** Complete operation manual detailing manual executions, targeted updates, completely deleting an agent, and setting up CI/CD pipelines.
-
-```markdown
 # Linux Fleet Agent Manager
 
 An automated configuration management framework using **Ansible** and **Jenkins (Groovy)** to manage the entire lifecycle—**Install (Add), Upgrade (Update), and Purge (Delete)**—of infrastructure, security, and monitoring agents across Linux fleets.
