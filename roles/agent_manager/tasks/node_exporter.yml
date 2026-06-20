@@ -1,0 +1,71 @@
+---
+# ==============================================================================
+# REMOVE / PURGE BLOCK
+# ==============================================================================
+- name: "Node Exporter | Remove Agent if state is absent"
+  block:
+    - name: Stop and disable Node Exporter Service
+      ansible.builtin.systemd:
+        name: node_exporter
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Remove Node Exporter binary and unit file
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/local/bin/node_exporter
+        - /etc/systemd/system/node_exporter.service
+  when: node_exporter_state == 'absent'
+
+# ==============================================================================
+# ADD / UPDATE BLOCK
+# ==============================================================================
+- name: "Node Exporter | Install / Update Agent"
+  block:
+    - name: Create node_exporter system user
+      ansible.builtin.user:
+        name: node_exporter
+        shell: /sbin/nologin
+        system: true
+
+    - name: Download and unarchive Node Exporter binary
+      ansible.builtin.unarchive:
+        src: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: /tmp/
+        remote_src: true
+
+    - name: Copy binary to executable path
+      ansible.builtin.copy:
+        src: "/tmp/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: /usr/local/bin/node_exporter
+        mode: '0755'
+        remote_src: true
+
+    - name: Create Systemd service unit file
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/node_exporter.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Node Exporter
+          After=network.target
+
+          [Service]
+          User=node_exporter
+          Group=node_exporter
+          Type=simple
+          ExecStart=/usr/local/bin/node_exporter
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Force systemd daemon reload and start service
+      ansible.builtin.systemd:
+        name: node_exporter
+        state: restarted
+        daemon_reload: true
+        enabled: true
+  when: node_exporter_state == 'present'
