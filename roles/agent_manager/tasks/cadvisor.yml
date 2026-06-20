@@ -1,0 +1,57 @@
+---
+# ==============================================================================
+# REMOVE / PURGE BLOCK
+# ==============================================================================
+- name: "cAdvisor | Complete Removal"
+  block:
+    - name: Stop and disable cAdvisor service
+      ansible.builtin.systemd:
+        name: cadvisor
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Clear cAdvisor installation files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/local/bin/cadvisor
+        - /etc/systemd/system/cadvisor.service
+  when: cadvisor_state == 'absent'
+
+# ==============================================================================
+# ADD / UPDATE BLOCK
+# ==============================================================================
+- name: "cAdvisor | Provision and Update"
+  block:
+    - name: Download standalone cAdvisor binary
+      ansible.builtin.get_url:
+        url: "https://github.com/google/cadvisor/releases/download/{{ cadvisor_version }}/cadvisor-{{ cadvisor_version }}-linux-amd64"
+        dest: /usr/local/bin/cadvisor
+        mode: '0755'
+
+    - name: Configure cAdvisor systemd service unit
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/cadvisor.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=cAdvisor Container Runtime Monitor
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/local/bin/cadvisor --port=8080
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd and start cAdvisor
+      ansible.builtin.systemd:
+        name: cadvisor
+        state: restarted
+        daemon_reload: true
+        enabled: true
+  when: cadvisor_state == 'present'
