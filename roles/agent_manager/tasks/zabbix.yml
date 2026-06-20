@@ -1,0 +1,40 @@
+---
+# ==============================================================================
+# REMOVE / PURGE BLOCK
+# ==============================================================================
+- name: "Zabbix Agent | Complete Removal"
+  block:
+    - name: Stop and disable Zabbix Agent service
+      ansible.builtin.systemd:
+        name: zabbix-agent
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Remove Zabbix agent package
+      ansible.builtin.package:
+        name: zabbix-agent
+        state: absent
+
+    - name: Purge Zabbix remnants and config logs
+      ansible.builtin.file:
+        path: /etc/zabbix
+        state: absent
+  when: zabbix_state == 'absent'
+
+# ==============================================================================
+# ADD / UPDATE BLOCK
+# ==============================================================================
+- name: "Zabbix Agent | Provision and Update"
+  block:
+    - name: Install Zabbix agent package from repository
+      ansible.builtin.package:
+        name: zabbix-agent
+        state: present
+
+    - name: Ensure Zabbix service is enabled and active
+      ansible.builtin.systemd:
+        name: zabbix-agent
+        state: started
+        enabled: true
+  when: zabbix_state == 'present'
